@@ -14,32 +14,26 @@ class TapFlipkart(Tap):
 
     name = "tap-flipkart"
 
-    # TODO: Update this section with the actual config values you expect:
     config_jsonschema = th.PropertiesList(
         th.Property(
-            "auth_token",
+            "client_id",
             th.StringType,
             required=True,
-            secret=True,  # Flag config as protected.
-            description="The token to authenticate against the API service",
+            secret=True,
+            description="",
         ),
         th.Property(
-            "project_ids",
-            th.ArrayType(th.StringType),
-            required=True,
-            description="Project IDs to replicate",
-        ),
-        th.Property(
-            "start_date",
-            th.DateTimeType,
-            description="The earliest record date to sync",
-        ),
-        th.Property(
-            "api_url",
+            "client_secret",
             th.StringType,
-            default="https://api.mysample.com",
-            description="The url for the API service",
+            required=True,
+            secret=True,
+            description="",
         ),
+        # th.Property(
+        #     "start_date",
+        #     th.DateTimeType,
+        #     description="The earliest record date to sync",
+        # ),
     ).to_dict()
 
     def discover_streams(self) -> list[streams.FlipkartStream]:
@@ -49,8 +43,7 @@ class TapFlipkart(Tap):
             A list of discovered streams.
         """
         return [
-            streams.GroupsStream(self),
-            streams.UsersStream(self),
+            streams.ShipmentsStream(self),
         ]
 
 
