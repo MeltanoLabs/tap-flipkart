@@ -5,8 +5,6 @@ from __future__ import annotations
 import typing as t
 from pathlib import Path
 
-from singer_sdk import typing as th  # JSON Schema typing helpers
-
 from tap_flipkart.client import FlipkartStream
 from singer_sdk import metrics
 

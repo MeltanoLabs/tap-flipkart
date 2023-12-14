@@ -37,17 +37,7 @@ class FlipkartAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
         return cls(
             stream=stream,
             auth_endpoint="https://api.flipkart.net/oauth-service/oauth/token",
-            # oauth_headers={"Authorization": f"Basic {auth_token}"}
         )
-
-    # @property
-    # def auth_params(self) -> dict:
-    #     """Get query parameters.
-
-    #     Returns:
-    #         URL query parameters for authentication.
-    #     """
-    #     return {"grant_type": "client_credentials", "scope": "Seller_Api"}
 
     def update_access_token(self) -> None:
         """Update `access_token` along with: `last_refreshed` and `expires_in`.
@@ -56,9 +46,9 @@ class FlipkartAuthenticator(OAuthAuthenticator, metaclass=SingletonMeta):
             RuntimeError: When OAuth login fails.
         """
         request_time = utc_now()
-        # url = "https://api.flipkart.net/oauth-service/oauth/token"
         querystring = {"grant_type": "client_credentials", "scope": "Seller_Api"}
 
+        # Have to use different get request vs base implementation
         credentials = f"{self.client_id}:{self.client_secret}".encode()
         auth_token = base64.b64encode(credentials).decode("ascii")
         headers = {"Authorization": f"Basic {auth_token}"}
