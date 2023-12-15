@@ -42,6 +42,7 @@ class TapFlipkart(Tap):
             A list of discovered streams.
         """
         return [
+            streams.ReturnsStream(self),
             streams.ShipmentsStream(self),
         ]
 

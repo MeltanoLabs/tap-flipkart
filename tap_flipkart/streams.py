@@ -4,11 +4,63 @@ from __future__ import annotations
 
 import typing as t
 from pathlib import Path
+import requests
 
 from tap_flipkart.client import FlipkartStream
 from singer_sdk import metrics
+from singer_sdk.streams.rest import _TToken
 
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
+
+
+class ReturnsStream(FlipkartStream):
+    """Define custom stream."""
+
+    name = "returns"
+    api_version = "v2"
+    path = f"/{api_version}/returns"
+    records_jsonpath = "$.returnItems[*]"
+    primary_keys: t.ClassVar[list[str]] = ["returnId"]
+    schema_filepath = SCHEMAS_DIR / "returns.json"
+    rest_method = "GET"
+    next_page_token_jsonpath = "$.nextUrl"
+
+    def get_url_params(
+        self,
+        context: dict | None,  # noqa: ARG002
+        next_page_token: _TToken | None,  # noqa: ARG002
+    ) -> dict[str, t.Any] | str:
+        if next_page_token:
+            return {}
+        return {
+            # TODO: support customer_return and courier_return
+            "source": "courier_return"
+        }
+    
+    def prepare_request(
+        self,
+        context: dict | None,
+        next_page_token: _TToken | None,
+    ) -> requests.PreparedRequest:
+        """Prepare a request object for this stream.
+
+        If partitioning is supported, the `context` object will contain the partition
+        definitions. Pagination information can be parsed from `next_page_token` if
+        `next_page_token` is not None.
+
+        Args:
+            context: Stream partition or context dictionary.
+            next_page_token: Token, page number or any request argument to request the
+                next page of data.
+
+        Returns:
+            Build a request with the stream's URL, path, query parameters,
+            HTTP headers and authenticator.
+        """
+        request = super().prepare_request(context, next_page_token)
+        if next_page_token:
+            request.url = self.url_base + f"/{self.api_version}" + next_page_token
+        return request
 
 class ShipmentsStream(FlipkartStream):
     """Define custom stream."""

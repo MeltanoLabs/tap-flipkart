@@ -1,0 +1,121 @@
+{
+    "$schema": "http://json-schema.org/draft-04/schema#",
+    "type": "object",
+    "properties": {
+      "orderItemId": {
+        "type": "string"
+      },
+      "locationId": {
+        "type": "string"
+      },
+      "orderId": {
+        "type": "string"
+      },
+      "quantity": {
+        "type": "integer"
+      },
+      "orderDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "createdDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "courierName": {
+        "type": [
+            "null",
+            "string"
+        ]
+      },
+      "sellerId": {
+        "type": "string"
+      },
+      "returnId": {
+        "type": "string"
+      },
+      "status": {
+        "type": "string"
+      },
+      "type": {
+        "type": "string"
+      },
+      "reason": {
+        "type": "string"
+      },
+      "subReason": {
+        "type": "string"
+      },
+      "trackingId": {
+        "type": [
+            "null",
+            "string"
+        ]
+      },
+      "shipmentStatus": {
+        "type": [
+            "null",
+            "string"
+        ]
+      },
+      "shipmentId": {
+        "type": [
+            "null",
+            "string"
+        ]
+      },
+      "comments": {
+        "type": "string"
+      },
+      "updatedDate": {
+        "type": "string",
+        "format": "date-time"
+      },
+      "approvedOn": {
+        "type": [
+            "null",
+            "string"
+        ],
+        "format": "date-time"
+      },
+      "expectedDate": {
+        "type": [
+            "null",
+            "string"
+        ],
+        "format": "date-time"
+
+      },
+      "serviceProfile": {
+        "type": "string"
+      },
+      "services": {
+        "type": "array",
+        "items": {}
+      }
+    },
+    "required": [
+        "orderItemId",
+        "locationId",
+        "orderId",
+        "quantity",
+        "orderDate",
+        "createdDate",
+        "courierName",
+        "sellerId",
+        "returnId",
+        "status",
+        "type",
+        "reason",
+        "subReason",
+        "trackingId",
+        "shipmentStatus",
+        "shipmentId",
+        "comments",
+        "updatedDate",
+        "approvedOn",
+        "expectedDate",
+        "serviceProfile",
+        "services"
+      ]
+  }
