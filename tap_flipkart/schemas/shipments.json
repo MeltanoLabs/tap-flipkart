@@ -190,6 +190,18 @@
     },
     "shipmentType": {
       "type": "string"
+    },
+    "shipment_status_state": {
+      "type": "string"
+    },
+    "shipment_status_type": {
+      "type": "string"
+    },
+    "shipment_status_cancellation_type": {
+      "type": [
+        "null",
+        "string"
+      ]
     }
   },
   "required": [
@@ -204,6 +216,8 @@
     "subShipments",
     "orderItems",
     "forms",
-    "shipmentType"
+    "shipmentType",
+    "shipment_status_state",
+    "shipment_status_type"
   ]
 }

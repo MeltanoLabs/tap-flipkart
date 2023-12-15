@@ -33,8 +33,7 @@ class ReturnsStream(FlipkartStream):
         if next_page_token:
             return {}
         return {
-            # TODO: support customer_return and courier_return
-            "source": "courier_return"
+            "source": context["source"]
         }
     
     def prepare_request(
@@ -62,6 +61,45 @@ class ReturnsStream(FlipkartStream):
             request.url = self.url_base + f"/{self.api_version}" + next_page_token
         return request
 
+    @property
+    def partitions(self) -> list[dict] | None:
+        """Get stream partitions.
+
+        Developers may override this property to provide a default partitions list.
+
+        By default, this method returns a list of any partitions which are already
+        defined in state, otherwise None.
+
+        Returns:
+            A list of partition key dicts (if applicable), otherwise `None`.
+        """
+        return [{"source": "courier_return"}, {"source": "customer_return"}]
+
+    def post_process(
+        self,
+        row: dict,
+        context: dict | None = None,  # noqa: ARG002
+    ) -> dict | None:
+        """As needed, append or transform raw data to match expected structure.
+
+        Optional. This method gives developers an opportunity to "clean up" the results
+        prior to returning records to the downstream tap - for instance: cleaning,
+        renaming, or appending properties to the raw record result returned from the
+        API.
+
+        Developers may also return `None` from this method to filter out
+        invalid or not-applicable records from the stream.
+
+        Args:
+            row: Individual record in the stream.
+            context: Stream partition or context dictionary.
+
+        Returns:
+            The resulting record dict, or `None` if the record should be excluded.
+        """
+        row["return_source"] = context["source"]
+        return row
+
 class ShipmentsStream(FlipkartStream):
     """Define custom stream."""
 
@@ -71,9 +109,6 @@ class ShipmentsStream(FlipkartStream):
     primary_keys: t.ClassVar[list[str]] = ["shipmentId"]
     schema_filepath = SCHEMAS_DIR / "shipments.json"
     rest_method = "POST"
-
-    # This operation should be used if hasMore is true in the response of POST /v3/shipments/filter API, so that the client can fetch the next set of shipment which qualify the earlier defined filter criteria. User need not build this URL by themselves, just use the URL returned as nextPageUrl in the response of POST /v3/shipments/filter or GET /v3/shipments/filter.
-
 
     def prepare_request_payload(
         self,
@@ -91,12 +126,8 @@ class ShipmentsStream(FlipkartStream):
         Returns:
             A dictionary with the JSON body for a POST requests.
         """
-        # TODO: how to configure all these variations?
         return {
-            "filter": {
-                "states": ["APPROVED" , "PACKING_IN_PROGRESS", "PACKED", "FORM_FAILED", "READY_TO_DISPATCH"],
-                "type": "preDispatch"
-            },
+            "filter": context["filter"],
             "pagination": {
                 "pageSize": 20
             },
@@ -105,38 +136,118 @@ class ShipmentsStream(FlipkartStream):
                 "order": "asc"
             }
         }
-        # 
-        # Delivered eventually failed probably due to too many requests. Together is less than all individually. Maybe check if theres overlap?
-        # return {
-        #     "filter": {
-        #         "states": ["PICKUP_COMPLETE"],
-        #         # "SHIPPED", "DELIVERED", "PICKUP_COMPLETE"],
-        #         "type": "postDispatch"
-        #     },
-        #     "pagination": {
-        #         "pageSize": 20
-        #     },
-        #     "sort": {
-        #         "field": "orderDate",
-        #         "order": "asc"
-        #     }
-        # }
-        # return {
-        #     "filter": {
-        #         "states": ["CANCELLED"],
-        #         "type": "cancelled",
-        #         # marketplaceCancellation and buyerCancellation are listed as types but dont work
-        #         "cancellationType": "sellerCancellation"
-        #         # marketplaceCancellation, sellerCancellation, buyerCancellation
-        #     },
-        #     "pagination": {
-        #         "pageSize": 20
-        #     },
-        #     "sort": {
-        #         "field": "orderDate",
-        #         "order": "asc"
-        #     }
-        # }
+
+    @property
+    def partitions(self) -> list[dict] | None:
+        """Get stream partitions.
+
+        Developers may override this property to provide a default partitions list.
+
+        By default, this method returns a list of any partitions which are already
+        defined in state, otherwise None.
+
+        Returns:
+            A list of partition key dicts (if applicable), otherwise `None`.
+        """
+        return [
+            {
+                "filter": {
+                    "states": ["APPROVED"],
+                    "type": "preDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["PACKING_IN_PROGRESS"],
+                    "type": "preDispatch"
+                }
+            },
+                        {
+                "filter": {
+                    "states": ["PACKED"],
+                    "type": "preDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["FORM_FAILED"],
+                    "type": "preDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["READY_TO_DISPATCH"],
+                    "type": "preDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["SHIPPED"],
+                    "type": "postDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["DELIVERED"],
+                    "type": "postDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["PICKUP_COMPLETE"],
+                    "type": "postDispatch"
+                }
+            },
+            {
+                "filter": {
+                    "states": ["CANCELLED"],
+                    "type": "cancelled",
+                    "cancellationType": "sellerCancellation"
+                }
+            },
+            # TODO: these requests fail
+            # {
+            #     "filter": {
+            #         "states": ["CANCELLED"],
+            #         "type": "cancelled",
+            #         "cancellationType": "marketplaceCancellation"
+            #     }
+            # },
+            # {
+            #     "filter": {
+            #         "states": ["CANCELLED"],
+            #         "type": "cancelled",
+            #         "cancellationType": "buyerCancellation"
+            #     }
+            # }
+        ]
+
+    def post_process(
+        self,
+        row: dict,
+        context: dict | None = None,  # noqa: ARG002
+    ) -> dict | None:
+        """As needed, append or transform raw data to match expected structure.
+
+        Optional. This method gives developers an opportunity to "clean up" the results
+        prior to returning records to the downstream tap - for instance: cleaning,
+        renaming, or appending properties to the raw record result returned from the
+        API.
+
+        Developers may also return `None` from this method to filter out
+        invalid or not-applicable records from the stream.
+
+        Args:
+            row: Individual record in the stream.
+            context: Stream partition or context dictionary.
+
+        Returns:
+            The resulting record dict, or `None` if the record should be excluded.
+        """
+        row["shipment_status_state"] = context["filter"]["states"][0]
+        row["shipment_status_type"] = context["filter"]["type"]
+        row["shipment_status_cancellation_type"] = context["filter"].get("cancellationType")
+        return row
 
     def request_records(self, context: dict | None) -> t.Iterable[dict]:
         """Request records from REST endpoint(s), returning response records.
