@@ -214,7 +214,7 @@ class ShipmentsStream(FlipkartStream):
         Returns:
             A list of partition key dicts (if applicable), otherwise `None`.
         """
-        return [
+        available_partitions = [
             {
                 "filter": {
                     "states": ["APPROVED"],
@@ -286,6 +286,21 @@ class ShipmentsStream(FlipkartStream):
             #     }
             # }
         ]
+        selections = self.config.get("shipment_state_selections")
+        if selections:
+            partitions = []
+            include = selections.get(
+                "include",
+                [partition["filter"]["states"][0] for partition in available_partitions]
+            )
+            exclude = selections.get("exclude", [])
+            for partition in available_partitions:
+                state = partition["filter"]["states"][0]
+                if (state in include) and (state not in exclude):
+                    partitions.append(partition)
+        else:
+            partitions = available_partitions
+        return partitions
 
     def post_process(
         self,

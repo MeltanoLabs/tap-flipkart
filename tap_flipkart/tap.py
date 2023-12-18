@@ -33,6 +33,23 @@ class TapFlipkart(Tap):
             th.DateTimeType,
             description="The earliest record date to sync",
         ),
+        th.Property(
+            "shipment_state_selections",
+            th.ObjectType(
+                th.Property(
+                    "include",
+                    th.ArrayType(th.StringType),
+                    description="Shipment states to include.",
+                ),
+                th.Property(
+                    "exclude",
+                    th.ArrayType(th.StringType),
+                    description="Shipment states to exclude.",
+                ),
+            ),
+            description="An object of include or exclude options for shipment states. If left null then all available states will be selected.",
+            default=None,
+        )
     ).to_dict()
 
     def discover_streams(self) -> list[streams.FlipkartStream]:
