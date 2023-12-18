@@ -72,7 +72,6 @@
                   "required": [
                     "packageId",
                     "packageSku",
-                    "dimensions"
                   ]
                 }
             }
@@ -209,13 +208,10 @@
     "dispatchByDate",
     "dispatchAfterDate",
     "updatedAt",
-    "locationId",
     "hold",
     "mps",
-    "packagingPolicy",
     "subShipments",
     "orderItems",
-    "forms",
     "shipmentType",
     "shipment_status_state",
     "shipment_status_type"
