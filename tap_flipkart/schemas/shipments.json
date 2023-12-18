@@ -52,7 +52,7 @@
                           "type": "number"
                         },
                         "breadth": {
-                          "type": "integer"
+                          "type": "number"
                         },
                         "height": {
                           "type": "number"
