@@ -5,10 +5,12 @@ from __future__ import annotations
 import typing as t
 from pathlib import Path
 import requests
+import datetime
 
 from tap_flipkart.client import FlipkartStream
 from singer_sdk import metrics
 from singer_sdk.streams.rest import _TToken
+from typing import Iterable, Any
 
 SCHEMAS_DIR = Path(__file__).parent / Path("./schemas")
 
@@ -110,6 +112,67 @@ class ShipmentsStream(FlipkartStream):
     schema_filepath = SCHEMAS_DIR / "shipments.json"
     rest_method = "POST"
 
+
+    def __init__(self, *args, **kwargs):
+        """Initialize the REST stream.
+
+        Args:
+            tap: Singer Tap this stream belongs to.
+            schema: JSON schema for records in this stream.
+            name: Name of this stream.
+            path: URL path for this entity stream.
+        """
+        super().__init__(*args, **kwargs)
+        self._from_date = None
+        self._to_date = None
+
+    def _get_date_ranges(self, start_date: datetime.datetime, hours: int) -> list[tuple[datetime.datetime, datetime.datetime]]:
+        """
+        Generates a list of tuples representing time ranges from a past date until today.
+
+        Args:
+            start_date: A datetime object representing a date in the past.
+
+        Returns:
+            A list of tuples, where each tuple represents a time range (start date, end date).
+        """
+        current_date = datetime.datetime.combine(start_date, datetime.time.min)
+
+        ranges = []
+        now = datetime.datetime.now()
+        while current_date <= now:
+            range_end = current_date + datetime.timedelta(hours=hours)
+            ranges.append((current_date, range_end))
+            current_date = range_end
+        return ranges
+
+    def get_records(self, context: dict | None) -> Iterable[dict[str, Any]]:
+        """Return a generator of record-type dictionary objects.
+
+        Each record emitted should be a dictionary of property names to their values.
+
+        Args:
+            context: Stream partition or context dictionary.
+
+        Yields:
+            One item per (possibly processed) record in the API.
+        """
+        # TODO: use SDK method for coalescing start_date and bookmark
+        start_date = self.config.get("start_date")
+        # Related to challenges with https://github.com/meltano/tap-flipkart/issues/9
+        if start_date and context["filter"]["states"][0] == "DELIVERED":
+            hour_diff = 1
+            previous_range = (datetime.date.today() - datetime.timedelta(hours=hour_diff))
+            start_date = datetime.datetime.strptime(start_date, '%Y-%m-%d').date()
+            if start_date < previous_range:
+                ranges = self._get_date_ranges(start_date, hour_diff)
+                for (start, end) in ranges:
+                    self._from_date =  datetime.datetime.strftime(start, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    self._to_date = datetime.datetime.strftime(end, "%Y-%m-%dT%H:%M:%S.%fZ")
+                    yield from super().get_records(context)
+        else:
+            yield from super().get_records(context)
+
     def prepare_request_payload(
         self,
         context: dict | None,  # noqa: ARG002
@@ -126,15 +189,17 @@ class ShipmentsStream(FlipkartStream):
         Returns:
             A dictionary with the JSON body for a POST requests.
         """
+        if context["filter"]["states"][0] == "DELIVERED":
+            # Related to challenges with https://github.com/meltano/tap-flipkart/issues/9
+            context["filter"]["orderDate"] = {
+                "from": self._from_date,
+                "to": self._to_date
+            }
         return {
             "filter": context["filter"],
             "pagination": {
                 "pageSize": 20
             },
-            "sort": {
-                "field": "orderDate",
-                "order": "asc"
-            }
         }
 
     @property
