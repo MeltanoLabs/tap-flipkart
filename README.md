@@ -16,16 +16,17 @@ Built with the [Meltano Singer SDK](https://sdk.meltano.com).
 
 ## Settings
 
-| Setting             | Required | Default | Description |
-|:--------------------|:--------:|:-------:|:------------|
-| client_id           | True     | None    |             |
-| client_secret       | True     | None    |             |
-| start_date          | False    | None    | The earliest record date to sync |
-| stream_maps         | False    | None    | Config object for stream maps capability. For more information check out [Stream Maps](https://sdk.meltano.com/en/latest/stream_maps.html). |
-| stream_map_config   | False    | None    | User-defined config values to be used within map expressions. |
-| flattening_enabled  | False    | None    | 'True' to enable schema flattening and automatically expand nested properties. |
-| flattening_max_depth| False    | None    | The max depth to flatten schemas. |
-| batch_config        | False    | None    |             |
+| Setting                  | Required | Default | Description |
+|:-------------------------|:--------:|:-------:|:------------|
+| client_id                | True     | None    | The Flipkart API client ID. |
+| client_secret            | True     | None    | The Flipkart API client secret. |
+| start_date               | False    | None    | The earliest record date to sync |
+| shipment_state_selections| False    | None    | An object of include or exclude options for shipment states. If left null then all available states will be selected. |
+| stream_maps              | False    | None    | Config object for stream maps capability. For more information check out [Stream Maps](https://sdk.meltano.com/en/latest/stream_maps.html). |
+| stream_map_config        | False    | None    | User-defined config values to be used within map expressions. |
+| flattening_enabled       | False    | None    | 'True' to enable schema flattening and automatically expand nested properties. |
+| flattening_max_depth     | False    | None    | The max depth to flatten schemas. |
+| batch_config             | False    | None    |             |
 
 A full list of supported settings and capabilities is available by running: `tap-flipkart --about`
 

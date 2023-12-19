@@ -19,14 +19,14 @@ class TapFlipkart(Tap):
             th.StringType,
             required=True,
             secret=True,
-            description="",
+            description="The Flipkart API client ID.",
         ),
         th.Property(
             "client_secret",
             th.StringType,
             required=True,
             secret=True,
-            description="",
+            description="The Flipkart API client secret.",
         ),
         th.Property(
             "start_date",
@@ -48,7 +48,6 @@ class TapFlipkart(Tap):
                 ),
             ),
             description="An object of include or exclude options for shipment states. If left null then all available states will be selected.",
-            default=None,
         )
     ).to_dict()
 
