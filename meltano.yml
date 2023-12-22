@@ -1,13 +1,13 @@
 version: 1
 send_anonymous_usage_stats: true
-project_id: "tap-flipkart"
-default_environment: test
+project_id: tap-flipkart
+default_environment: dev
 environments:
-- name: test
+- name: dev
 plugins:
   extractors:
-  - name: "tap-flipkart"
-    namespace: "tap_flipkart"
+  - name: tap-flipkart
+    namespace: tap_flipkart
     pip_url: -e .
     capabilities:
     - state
@@ -15,16 +15,19 @@ plugins:
     - discover
     - about
     - stream-maps
-    config:
-      start_date: '2010-01-01T00:00:00Z'
     settings:
-    # TODO: To configure using Meltano, declare settings and their types here:
     - name: username
     - name: password
       kind: password
     - name: start_date
       value: '2010-01-01T00:00:00Z'
+    config:
+      start_date: '2010-01-01T00:00:00Z'
   loaders:
   - name: target-jsonl
     variant: andyh1203
     pip_url: target-jsonl
+  utilities:
+  - name: dbt-postgres
+    variant: dbt-labs
+    pip_url: dbt-core~=1.5.2 dbt-postgres~=1.5.2 git+https://github.com/meltano/dbt-ext.git@main
